@@ -1,0 +1,12 @@
+version: '3.8'
+services :
+  redis :
+    image: redis:7
+    container_name: redis-server
+    ports:
+      - "6379:6379"
+    restart: always
+
+# docker-compose up -d
+# docker ps
+# docker exec -it redis-server redis-cli ping
