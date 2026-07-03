@@ -6,28 +6,197 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  @apply bg-slate-50 text-slate-900;
 }
 
-@layer components {
-  .btn-primary {
-    @apply px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200;
+/* ===== ANIMATIONS ===== */
+@keyframes blob {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
   }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+}
 
-  .btn-secondary {
-    @apply px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors duration-200;
+@keyframes shimmer {
+  -100% {
+    background-position: -200% 0;
   }
+  100% {
+    background-position: calc(200% + 0px) 0;
+  }
+}
 
-  .input-field {
-    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500;
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
-  .card {
-    @apply bg-white rounded-lg shadow-md p-6 border border-gray-100;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
   }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animate-blob-2 {
+  animation: blob 7s infinite;
+  animation-delay: 2s;
+}
+
+.animate-blob-3 {
+  animation: blob 7s infinite;
+  animation-delay: 4s;
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+  background-size: 200% 100%;
+}
+
+.animate-slide-in-up {
+  animation: slideInUp 0.3s ease-out;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ===== SCROLLBAR STYLING ===== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(148, 163, 184);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(100, 116, 139);
+}
+
+/* ===== FOCUS STYLES ===== */
+:focus-visible {
+  outline: 2px solid rgb(59, 130, 246);
+  outline-offset: 2px;
+}
+
+button:focus-visible {
+  outline: 2px solid rgb(59, 130, 246);
+  outline-offset: 2px;
+}
+
+input:focus-visible {
+  outline: 2px solid rgb(59, 130, 246);
+  outline-offset: 2px;
+}
+
+/* ===== UTILITY CLASSES ===== */
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, rgb(59, 130, 246), rgb(139, 92, 246));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-primary {
+  background: linear-gradient(135deg, rgb(59, 130, 246), rgb(99, 102, 241));
+}
+
+.gradient-success {
+  background: linear-gradient(135deg, rgb(16, 185, 129), rgb(5, 150, 105));
+}
+
+.gradient-danger {
+  background: linear-gradient(135deg, rgb(239, 68, 68), rgb(220, 38, 38));
+}
+
+.gradient-warning {
+  background: linear-gradient(135deg, rgb(245, 158, 11), rgb(217, 119, 6));
+}
+
+/* ===== SHADOWS ===== */
+.shadow-sm-soft {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.shadow-md-soft {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+}
+
+.shadow-lg-soft {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.shadow-xl-soft {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== TOAST STYLING ===== */
+:global(.hot-toast) {
+  font-family: inherit;
+  border-radius: 0.5rem;
+}
+
+:global(.hot-toast-success) {
+  @apply bg-green-500 text-white;
+}
+
+:global(.hot-toast-error) {
+  @apply bg-red-500 text-white;
+}
+
+:global(.hot-toast-loading) {
+  @apply bg-blue-500 text-white;
 }

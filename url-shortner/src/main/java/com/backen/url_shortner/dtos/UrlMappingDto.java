@@ -5,13 +5,16 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UrlMappingDto {
+public class UrlMappingDto implements Serializable {
+    private static final long serialVersionUID = 1L;
+    
     private Long id;
     private String originalUrl, shortUrl;
     private int clickCount;

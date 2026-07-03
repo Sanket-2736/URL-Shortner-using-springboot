@@ -33,7 +33,7 @@ public class UrlMappingService {
     private static final String BASE62 =
             "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-    @CachePut(value = "urls", key = "#result.shortUrl")
+    @CachePut(value = "urlDtos", key = "#result.shortUrl")
     public UrlMappingDto createShortUrl(String originalUrl, User user) {
 
         String shortUrl;
@@ -126,7 +126,7 @@ public class UrlMappingService {
                 .collect(Collectors.groupingBy(click -> click.getClickDate().toLocalDate(), Collectors.counting()));
     }
 
-    @Cacheable(value = "urls", key="#shortUrl")
+    @Cacheable(value = "urls", key = "#shortUrl")
     public UrlMapping getOriginalUrl(String shortUrl) {
         UrlMapping mapping = urlMappingRepository.findByShortUrl(shortUrl).orElse(null);
         if(mapping != null){

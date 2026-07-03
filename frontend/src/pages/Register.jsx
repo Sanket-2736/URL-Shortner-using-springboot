@@ -2,166 +2,186 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { authAPI } from '../services/api';
-import { UserPlus, Mail, Lock, User } from 'lucide-react';
+import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/Card';
+import { Lock, Mail, User } from 'lucide-react';
 
 export default function Register() {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
   const navigate = useNavigate();
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.username.trim()) {
+      newErrors.username = 'Username is required';
+    } else if (formData.username.length < 3) {
+      newErrors.username = 'Username must be at least 3 characters';
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email';
+    }
+
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = 'Please confirm your password';
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!username || !email || !password || !confirmPassword) {
-      toast.error('Please fill all fields');
-      return;
-    }
 
-    if (password !== confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
-    }
-
-    if (password.length < 6) {
-      toast.error('Password must be at least 6 characters');
-      return;
-    }
-
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      toast.error('Please enter a valid email address');
+    if (!validateForm()) {
+      toast.error('Please fix the errors above');
       return;
     }
 
     setLoading(true);
     try {
-      const response = await authAPI.register(username, email, password);
-      
-      if (response.data) {
-        toast.success('Registration successful! Please login.');
-        setTimeout(() => navigate('/login'), 1500);
-      }
+      await authAPI.register(formData.username, formData.email, formData.password);
+      toast.success('Account created successfully! Redirecting to login...');
+      setTimeout(() => navigate('/login'), 1500);
     } catch (error) {
-      const errorMsg = error.response?.data || 'Registration failed. Please try again.';
+      const errorMsg = error.response?.data?.message || 'Registration failed';
       toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: null }));
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-xl shadow-lg p-8">
-          <div className="text-center mb-8">
-            <div className="inline-block p-3 bg-green-100 rounded-full mb-4">
-              <UserPlus className="w-8 h-8 text-green-600" />
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900">Create Account</h1>
-            <p className="text-gray-600 mt-2">Join us to shorten your URLs</p>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-50 flex items-center justify-center px-4 py-12">
+      {/* Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-indigo-300 rounded-full mix-blend-multiply filter blur-3xl opacity-5 animate-blob"></div>
+        <div className="absolute bottom-1/3 right-1/4 w-96 h-96 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-5 animate-blob-2"></div>
+      </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-                Username
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="username"
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Choose a username"
-                  className="input-field pl-10"
-                  disabled={loading}
-                />
+      <div className="relative z-10 w-full max-w-md">
+        <Card shadow="lg-soft" className="animate-slide-in-up">
+          <CardHeader>
+            <div className="flex items-center justify-center mb-6">
+              <div className="w-14 h-14 gradient-primary rounded-xl flex items-center justify-center shadow-md-soft">
+                <span className="text-2xl font-bold text-white">✨</span>
+              </div>
+            </div>
+            <CardTitle className="text-center text-2xl">Get Started</CardTitle>
+            <CardDescription className="text-center">
+              Create your account to start shortening URLs
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <Input
+                label="Username"
+                placeholder="Choose a username"
+                name="username"
+                value={formData.username}
+                onChange={handleInputChange}
+                error={errors.username}
+                icon={User}
+                required
+              />
+
+              <Input
+                label="Email Address"
+                type="email"
+                placeholder="you@example.com"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                error={errors.email}
+                icon={Mail}
+                required
+              />
+
+              <Input
+                label="Password"
+                type="password"
+                placeholder="At least 6 characters"
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                error={errors.password}
+                icon={Lock}
+                required
+              />
+
+              <Input
+                label="Confirm Password"
+                type="password"
+                placeholder="••••••••"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
+                error={errors.confirmPassword}
+                icon={Lock}
+                required
+              />
+
+              <Button
+                type="submit"
+                fullWidth
+                size="lg"
+                isLoading={loading}
+                disabled={loading}
+              >
+                Create Account
+              </Button>
+            </form>
+
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-300"></div>
+              </div>
+              <div className="relative flex justify-center">
+                <span className="px-2 bg-white text-sm text-slate-600">
+                  Already have an account?
+                </span>
               </div>
             </div>
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  className="input-field pl-10"
-                  disabled={loading}
-                />
-              </div>
-            </div>
+            <Link to="/login">
+              <Button variant="outline" fullWidth size="lg">
+                Sign In
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="At least 6 characters"
-                  className="input-field pl-10"
-                  disabled={loading}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                Confirm Password
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm your password"
-                  className="input-field pl-10"
-                  disabled={loading}
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full btn-primary font-semibold text-lg py-3 mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Creating account...' : 'Create Account'}
-            </button>
-          </form>
-
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <p className="text-center text-gray-600">
-              Already have an account?{' '}
-              <Link to="/login" className="text-blue-600 hover:text-blue-700 font-semibold">
-                Sign in
-              </Link>
-            </p>
-          </div>
-        </div>
+        <p className="text-center text-slate-600 text-sm mt-6">
+          By creating an account, you agree to our Terms
+        </p>
       </div>
     </div>
   );

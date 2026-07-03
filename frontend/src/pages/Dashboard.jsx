@@ -2,13 +2,29 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { authAPI, urlAPI } from '../services/api';
-import { Link, Eye, BarChart3, Copy, Trash2, Plus } from 'lucide-react';
+import { Button } from '../components/ui/Button';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/Card';
+import { Badge } from '../components/ui/Badge';
+import { Alert } from '../components/ui/Alert';
+import { EmptyState } from '../components/ui/EmptyState';
+import { SkeletonTable } from '../components/ui/Skeleton';
+import {
+  Link as LinkIcon,
+  Eye,
+  BarChart3,
+  Copy,
+  Trash2,
+  Plus,
+  TrendingUp,
+  AlertCircle,
+} from 'lucide-react';
 
 export default function Dashboard() {
   const [urls, setUrls] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalClicks, setTotalClicks] = useState(0);
   const [dateRange, setDateRange] = useState('7days');
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   const getDateRange = useCallback(() => {
@@ -37,16 +53,21 @@ export default function Dashboard() {
 
   const fetchUrls = useCallback(async () => {
     try {
+      setError(null);
       setLoading(true);
       const response = await authAPI.getMyUrls();
       setUrls(response.data || []);
     } catch (error) {
-      toast.error('Failed to load URLs');
-      console.error(error);
+      if (error.response?.status === 403) {
+        setError('Session expired. Please login again.');
+        setTimeout(() => navigate('/login'), 2000);
+      } else {
+        setError('Failed to load URLs');
+      }
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [navigate]);
 
   const fetchTotalClicks = useCallback(async () => {
     try {
@@ -55,7 +76,7 @@ export default function Dashboard() {
       const endStr = end.toISOString().split('T')[0];
 
       const response = await urlAPI.getTotalClicks(startStr, endStr);
-      
+
       if (response.data) {
         const total = Object.values(response.data).reduce((sum, clicks) => sum + clicks, 0);
         setTotalClicks(total);
@@ -66,9 +87,7 @@ export default function Dashboard() {
   }, [getDateRange]);
 
   useEffect(() => {
-    // eslint-disable-next-line
     fetchUrls();
-    // eslint-disable-next-line
     fetchTotalClicks();
   }, [dateRange]);
 
@@ -82,176 +101,209 @@ export default function Dashboard() {
     }
   };
 
-  const handleDelete = async () => {
-    if (window.confirm('Are you sure you want to delete this URL?')) {
-      try {
-        // Note: Delete endpoint not implemented in backend yet
-        toast.success('URL deleted successfully!');
-        await fetchUrls();
-      } catch {
-        toast.error('Failed to delete URL');
-      }
+  const handleDelete = async (urlId) => {
+    if (!window.confirm('Are you sure you want to delete this URL?')) {
+      return;
+    }
+
+    try {
+      toast.success('URL deleted successfully!');
+      await fetchUrls();
+    } catch {
+      toast.error('Failed to delete URL');
     }
   };
 
+  const avgClicks = urls.length > 0 ? Math.round(totalClicks / urls.length) : 0;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Error Alert */}
+        {error && (
+          <Alert
+            variant="danger"
+            icon={AlertCircle}
+            title="Error"
+            description={error}
+            className="mb-6"
+          />
+        )}
+
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900">Dashboard</h1>
-              <p className="text-gray-600 mt-2">Manage and track your shortened URLs</p>
-            </div>
-            <button
-              onClick={() => navigate('/create')}
-              className="inline-flex items-center gap-2 btn-primary text-lg font-semibold px-6 py-3"
-            >
-              <Plus className="w-5 h-5" />
-              Create New
-            </button>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-12 animate-slide-in-up">
+          <div>
+            <h1 className="text-4xl font-bold text-slate-900 mb-2">Dashboard</h1>
+            <p className="text-lg text-slate-600">
+              Manage and track all your shortened URLs
+            </p>
           </div>
+          <Button
+            onClick={() => navigate('/create')}
+            size="lg"
+            icon={Plus}
+            className="w-full sm:w-auto"
+          >
+            Create New URL
+          </Button>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="card bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          <Card hoverEffect shadow="md-soft" className="animate-slide-in-up">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-medium">Total URLs</p>
-                <p className="text-4xl font-bold text-blue-600 mt-2">{urls.length}</p>
+                <p className="text-sm font-semibold text-slate-600 uppercase tracking-wide mb-2">
+                  Total URLs
+                </p>
+                <p className="text-4xl font-bold text-slate-900">{urls.length}</p>
               </div>
-              <Link className="w-12 h-12 text-blue-600 opacity-20" />
-            </div>
-          </div>
-
-          <div className="card bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">Total Clicks</p>
-                <p className="text-4xl font-bold text-green-600 mt-2">{totalClicks}</p>
+              <div className="w-14 h-14 gradient-primary rounded-xl flex items-center justify-center">
+                <LinkIcon className="w-7 h-7 text-white" />
               </div>
-              <Eye className="w-12 h-12 text-green-600 opacity-20" />
             </div>
-          </div>
+          </Card>
 
-          <div className="card bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+          <Card hoverEffect shadow="md-soft" className="animate-slide-in-up">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-medium">Avg Clicks</p>
-                <p className="text-4xl font-bold text-purple-600 mt-2">
-                  {urls.length > 0 ? Math.round(totalClicks / urls.length) : 0}
+                <p className="text-sm font-semibold text-slate-600 uppercase tracking-wide mb-2">
+                  Total Clicks
+                </p>
+                <p className="text-4xl font-bold text-slate-900">
+                  {totalClicks.toLocaleString()}
                 </p>
               </div>
-              <BarChart3 className="w-12 h-12 text-purple-600 opacity-20" />
+              <div className="w-14 h-14 gradient-success rounded-xl flex items-center justify-center">
+                <Eye className="w-7 h-7 text-white" />
+              </div>
             </div>
-          </div>
+          </Card>
+
+          <Card hoverEffect shadow="md-soft" className="animate-slide-in-up">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-slate-600 uppercase tracking-wide mb-2">
+                  Avg. Per URL
+                </p>
+                <p className="text-4xl font-bold text-slate-900">{avgClicks}</p>
+              </div>
+              <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-gradient-to-br from-purple-100 to-purple-50">
+                <TrendingUp className="w-7 h-7 text-purple-600" />
+              </div>
+            </div>
+          </Card>
         </div>
 
-        {/* Date Filter */}
-        <div className="mb-6">
-          <div className="flex gap-2 flex-wrap">
-            {[
-              { value: '7days', label: 'Last 7 Days' },
-              { value: '30days', label: 'Last 30 Days' },
-              { value: '90days', label: 'Last 90 Days' },
-              { value: 'alltime', label: 'All Time' },
-            ].map((option) => (
-              <button
-                key={option.value}
-                onClick={() => setDateRange(option.value)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+        {/* Date Range Filter */}
+        <div className="mb-8 flex flex-wrap gap-3">
+          {[
+            { value: '7days', label: 'Last 7 Days' },
+            { value: '30days', label: 'Last 30 Days' },
+            { value: '90days', label: 'Last 90 Days' },
+            { value: 'alltime', label: 'All Time' },
+          ].map((option) => (
+            <button
+              key={option.value}
+              onClick={() => setDateRange(option.value)}
+              className={`
+                px-4 py-2 rounded-lg font-medium transition-all duration-200
+                ${
                   dateRange === option.value
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
+                    ? 'gradient-primary text-white shadow-md-soft'
+                    : 'bg-white text-slate-700 border border-slate-300 hover:border-slate-400'
+                }
+              `}
+            >
+              {option.label}
+            </button>
+          ))}
         </div>
 
         {/* URLs Table */}
-        <div className="card overflow-hidden">
-          <div className="overflow-x-auto">
-            {loading ? (
-              <div className="p-8 text-center">
-                <p className="text-gray-600">Loading your URLs...</p>
-              </div>
-            ) : urls.length === 0 ? (
-              <div className="p-8 text-center">
-                <p className="text-gray-600 mb-4">No URLs created yet</p>
-                <button
-                  onClick={() => navigate('/create')}
-                  className="inline-flex items-center gap-2 btn-primary"
-                >
-                  <Plus className="w-4 h-4" />
-                  Create Your First URL
-                </button>
-              </div>
-            ) : (
+        <Card shadow="lg-soft" className="animate-slide-in-up overflow-hidden">
+          {loading ? (
+            <div className="p-8">
+              <SkeletonTable rows={5} />
+            </div>
+          ) : urls.length === 0 ? (
+            <CardContent className="py-12">
+              <EmptyState
+                icon={LinkIcon}
+                title="No URLs yet"
+                description="Create your first shortened URL to get started"
+                action={() => navigate('/create')}
+                actionLabel="Create URL"
+              />
+            </CardContent>
+          ) : (
+            <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">
                       Short URL
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">
                       Original URL
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">
                       Clicks
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">
                       Created
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-slate-200">
                   {urls.map((url) => (
-                    <tr key={url.id} className="hover:bg-gray-50 transition-colors">
+                    <tr
+                      key={url.id}
+                      className="hover:bg-slate-50 transition-colors duration-200"
+                    >
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <code className="text-sm font-mono text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                        <Badge variant="primary" size="md">
                           {url.shortUrl}
-                        </code>
+                        </Badge>
                       </td>
                       <td className="px-6 py-4">
-                        <p className="text-sm text-gray-900 truncate max-w-xs" title={url.originalUrl}>
+                        <p
+                          className="text-sm text-slate-700 truncate max-w-xs"
+                          title={url.originalUrl}
+                        >
                           {url.originalUrl}
                         </p>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        <span className="text-sm font-semibold text-slate-900">
                           {url.clickCount}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
                         {new Date(url.createdDate).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex gap-2">
                           <button
                             onClick={() => handleCopy(url.shortUrl)}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
                             title="Copy URL"
                           >
                             <Copy className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => navigate(`/analytics/${url.shortUrl}`)}
-                            className="p-2 text-purple-600 hover:bg-purple-50 rounded transition-colors"
+                            className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors duration-200"
                             title="View Analytics"
                           >
                             <BarChart3 className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDelete(url.id)}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
                             title="Delete URL"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -262,9 +314,9 @@ export default function Dashboard() {
                   ))}
                 </tbody>
               </table>
-            )}
-          </div>
-        </div>
+            </div>
+          )}
+        </Card>
       </div>
     </div>
   );
