@@ -18,12 +18,20 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class AuthController {
     private final UserService userService;
     private final UrlMappingService urlMappingService;
 
+    @GetMapping("/test")
+    public ResponseEntity<?> test(){
+        return ResponseEntity.ok("Auth endpoint working!");
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody LoginRequest req){
+        System.out.println("LOGIN API HIT");
+        System.out.println(req);
         return ResponseEntity.ok(userService.authenticateUser(req));
     }
 

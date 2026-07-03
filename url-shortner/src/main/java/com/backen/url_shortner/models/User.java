@@ -11,7 +11,7 @@ import java.io.Serializable;
 @Entity
 @Table(name = "users")
 @Data
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class User implements Serializable {
@@ -21,5 +21,6 @@ public class User implements Serializable {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     private String email, password, username;
+    @Builder.Default
     private String role = "ROLE_USER";
 }

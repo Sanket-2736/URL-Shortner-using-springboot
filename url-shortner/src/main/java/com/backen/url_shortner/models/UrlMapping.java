@@ -13,7 +13,7 @@ import java.util.List;
 @Entity
 @Table(name = "url_mappings")
 @Data
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class UrlMapping implements Serializable {
@@ -25,6 +25,7 @@ public class UrlMapping implements Serializable {
 
     private String originalUrl;
     private String shortUrl;
+    @Builder.Default
     private int clickCount = 0;
     private LocalDateTime createdDate;
 

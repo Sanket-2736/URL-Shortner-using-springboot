@@ -6,10 +6,10 @@ import { setToken } from '../services/auth';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/Card';
-import { Lock, Mail } from 'lucide-react';
+import { Lock, User } from 'lucide-react';
 
 export default function Login() {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -17,8 +17,8 @@ export default function Login() {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!email.trim()) {
-      newErrors.email = 'Email is required';
+    if (!username.trim()) {
+      newErrors.username = 'Username is required';
     }
     if (!password) {
       newErrors.password = 'Password is required';
@@ -37,7 +37,7 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const response = await authAPI.login(email, password);
+      const response = await authAPI.login(username, password);
 
       if (response.data && (response.data.token || response.data.jwtToken)) {
         const token = response.data.token || response.data.jwtToken;
@@ -78,16 +78,16 @@ export default function Login() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <Input
-                label="Email Address"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
+                label="Username"
+                type="text"
+                placeholder="Enter your username"
+                value={username}
                 onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (errors.email) setErrors({ ...errors, email: null });
+                  setUsername(e.target.value);
+                  if (errors.username) setErrors({ ...errors, username: null });
                 }}
-                error={errors.email}
-                icon={Mail}
+                error={errors.username}
+                icon={User}
                 required
               />
 

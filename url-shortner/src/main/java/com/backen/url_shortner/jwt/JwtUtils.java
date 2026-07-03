@@ -6,6 +6,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -13,12 +14,12 @@ import javax.crypto.SecretKey;
 import java.security.Key;
 import java.util.Date;
 import java.util.stream.Collectors;
+
 @Component
+@Slf4j
 public class JwtUtils {
 
-    @Value(
-            "${jwt.secret}"
-    )
+    @Value("${jwt.secret}")
     private String secret;
 
     public String getJwtFromHeader(HttpServletRequest req){
@@ -52,8 +53,13 @@ public class JwtUtils {
                     .build().parseSignedClaims(token);
             return true;
         } catch (JwtException e) {
+            log.error("JWT validation failed - JwtException: {}", e.getMessage());
             throw new RuntimeException(e);
         } catch (IllegalArgumentException e) {
+            log.error("JWT validation failed - IllegalArgumentException: {}", e.getMessage());
+            throw new RuntimeException(e);
+        } catch (Exception e) {
+            log.error("JWT validation failed - Exception: {}", e.getMessage());
             throw new RuntimeException(e);
         }
     }
@@ -66,6 +72,12 @@ public class JwtUtils {
     }
 
     private Key key(){
-        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
+        try {
+            byte[] keyBytes = Decoders.BASE64.decode(secret);
+            return Keys.hmacShaKeyFor(keyBytes);
+        } catch (Exception e) {
+            log.error("Error decoding JWT secret: {}", e.getMessage());
+            throw new RuntimeException("Failed to create signing key", e);
+        }
     }
 }

@@ -9,15 +9,18 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 @RequiredArgsConstructor
 public class CorsConfig implements WebMvcConfigurer {
-    @Value("${frontend.url}")
+    @Value("${frontend.url:http://localhost:5173}")
     private String frontendUrl;
 
     @Override
     public void addCorsMappings(CorsRegistry registry){
+        System.out.println("Configuring CORS for: " + frontendUrl);
         registry.addMapping("/**")
                 .allowedOrigins(frontendUrl)
-                .allowedMethods("*")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                 .allowedHeaders("*")
-                .allowCredentials(true);
+                .exposedHeaders("Authorization")
+                .allowCredentials(true)
+                .maxAge(3600);
     }
 }

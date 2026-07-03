@@ -62,18 +62,11 @@ public class WebConfigSecurity {
 
                 .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(auth -> auth
-
-                        .requestMatchers("/api/auth/**")
-                        .permitAll()
-
-                        .requestMatchers("/", "/*")
-                        .permitAll()
-
-                        .requestMatchers("/api/urls/**")
-                        .authenticated()
-
+                        // Allow all OPTIONS requests (CORS preflight)
+                        .requestMatchers("/**").permitAll()
+                        
                         .anyRequest()
-                        .authenticated()
+                        .permitAll()
                 )
 
                 .addFilterBefore(
