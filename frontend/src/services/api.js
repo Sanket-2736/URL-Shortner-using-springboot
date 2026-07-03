@@ -1,21 +1,23 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = 'https://url-shortner-latest-xv4c.onrender.com/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true,
+  withCredentials: false,
 });
 
-// Add token to every request (except login/register)
+// Add token to every request
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
+    console.log('Token from storage:', token);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('Authorization header set:', config.headers.Authorization);
     }
     return config;
   },
@@ -27,7 +29,8 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 403) {
-      console.error('403 Forbidden:', error.response?.data);
+      console.error('403 Forbidden - Token may be invalid or expired');
+      // Optionally clear token on 403
       localStorage.removeItem('token');
     }
     return Promise.reject(error);
@@ -64,4 +67,3 @@ export const redirectAPI = {
 };
 
 export default api;
-
